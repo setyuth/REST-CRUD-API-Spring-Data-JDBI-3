@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import javax.validation.Valid;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,6 +23,8 @@ import com.yuthads.springdatajdbi3crud.service.ProductCrudService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 @RestController
 @RequestMapping("/api/product")
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class ProductCrudController {
 	private final ProductCrudService productService;
 	
 	@PostMapping()
+	@CacheEvict(value="product", allEntries = true)
 	public ResponseEntity<Product> createProduct (@RequestBody @Valid Product product) {
 		
 		log.info("Rest request to save product: {}", product);
@@ -43,6 +47,8 @@ public class ProductCrudController {
 	@GetMapping()
 	public ResponseEntity<List<Product>> getAllProducts() {
 		
+		sleep(2);
+		
 		log.info("Rest request to get all products");
 		
 		List<Product> list = productService.gdtAllProducts();
@@ -51,7 +57,18 @@ public class ProductCrudController {
 		
 	}
 	
+	private void sleep(int second) {
+
+		try {
+			SECONDS.sleep(second);
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
+	}
+
 	@GetMapping("/{id}")
+	//@Cacheable(value = "product", key = "#id")
 	public ResponseEntity<Product> getProductById(@PathVariable("id") long id) {
 		
 		log.info("Rest request to get product by id : {}", id);
@@ -90,19 +107,5 @@ public class ProductCrudController {
 		return opt.map(T -> new ResponseEntity<>("Product with id "+T.getId()+" was deleted.", HttpStatus.OK))
 				.orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND.getReasonPhrase(), HttpStatus.NOT_FOUND));
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 }
